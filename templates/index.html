@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Starforce Calculator</title>
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+	<h2> This is a Starforce Calculator for Weapons/Armour in Maplestory Mobile. Details are at the bottom.</h2>
+	<br>
+</head>
+<body>
+	{% if calc %}
+	<form action = "#" method = "post">
+
+	<label>Choose the initial Starforce:</label>
+	<select id="Startforce2" name="Startforce">
+		{% for i in range(30) %}
+			{% if i==Startforce %}
+	  			<option value={{i}} selected="selected">{{i}} </option>
+	  		{% else %}
+	  			<option value={{i}}>{{i}} </option>
+	  		{% endif %}
+		{% endfor %}
+	</select>
+	<br>
+	<label>Choose the final Starforce:</label>
+	<select id="Endforce2" name="Endforce" value={{Endforce}}>
+		{% for i in range(1,31) %}
+	  		{% if i==Endforce %}
+	  			<option value={{i}} selected="selected">{{i}} </option>
+	  		{% else %}
+	  			<option value={{i}}>{{i}} </option>
+	  		{% endif %}
+		{% endfor %}
+	</select>
+
+	<table class="datatable">
+		<tr>
+			<th>StarForce</th><th>Success</th><th>No Change</th><th>Decrease</th><th>Destroyed</th><th>Shield</th><th>Ward</th><th>Lucky</th><th>Click</th>
+			{% if calc %}
+				<th>Num Visits</th><th>Num Destroyed</th><th>Total Cost(M)</th>
+			{% endif %}
+		</tr>
+			<tr> 
+				<td>Select All</td><td></td><td></td><td></td><td></td>
+				{% if allscroll %}
+					<td><input type="checkbox" class="CB" name="allscroll" checked="true"/></td>
+				{% else %}
+					<td><input type="checkbox" class="CB" name="allscroll" /></td>
+				{% endif %}
+
+				{% if allward %}
+					<td><input type="checkbox" class="CB" name="allward" checked="true"/></td>
+				{% else %}
+					<td><input type="checkbox" class="CB" name="allward" /></td>
+				{% endif %}
+
+				{% if alllucky %}
+					<td><input type="checkbox" class="CB" name="alllucky" checked="true"/></td>
+				{% else %}
+					<td><input type="checkbox" class="CB" name="alllucky" /></td>
+				{% endif %}
+
+				{% if allclick %}
+					<td><input type="checkbox" class="CB" name="allclick" checked="true"/></td>
+				{% else %}
+					<td><input type="checkbox" class="CB" name="allclick" /></td>
+				{% endif %}
+ 			</tr>
+			{% for i in range(10) %}
+				<tr>
+					<td>{{i}}</td><td>{{increase[i]}}</td><td>{{same[i]}}</td><td>{{decrease[i]}}</td><td>{{destroy[i]}}</td>
+					<td><input type="checkbox" class="CB" name={{ scroll[i] }} disabled /></td>
+					<td><input type="checkbox" class="CB" name={{ ward[i] }} disabled /></td>
+
+					{% if response_lucky[i] %}
+						<td><input type="checkbox" class="CB" name={{ lucky[i] }} checked="true" /></td>
+					{% else %}
+						<td><input type="checkbox" class="CB" name={{ lucky[i] }} /></td>
+					{% endif %}
+
+					{% if response_click[i] %}
+						<td><input type="checkbox" class="CB" name={{ click[i] }} checked="true" /></td>
+					{% else %}
+						<td><input type="checkbox" class="CB" name={{ click[i] }} /></td>
+					{% endif %}
+					{% if calc %}
+						<td>{{n_visits[i]}}</td><td>{{n_destroyed[i]}}</td><td>{{totalcost[i]}}</td>
+					{% endif %}
+				</tr>
+			{% endfor %}
+			{% for i in range(10,30) %}
+				<td>{{i}}</td><td>{{increase[i]}}</td><td>{{same[i]}}</td><td>{{decrease[i]}}</td><td>{{destroy[i]}}</td>
+					{% if response_scroll[i] %}
+						<td><input type="checkbox" class="CB" name={{ scroll[i] }} checked ="true" /></td>
+					{% else %}
+						<td><input type="checkbox" class="CB" name={{ scroll[i] }} /></td>
+					{% endif %}
+
+					{% if response_ward[i] %}
+						<td><input type="checkbox" class="CB" name={{ ward[i] }} checked ="true" /></td>
+					{% else %}
+						<td><input type="checkbox" class="CB" name={{ ward[i] }} /></td>
+					{% endif %}
+
+					{% if response_lucky[i] %}
+						<td><input type="checkbox" class="CB" name={{ lucky[i] }} checked ="true" /></td>
+					{% else %}
+						<td><input type="checkbox" class="CB" name={{ lucky[i] }} /></td>
+					{% endif %}
+
+
+					{% if i>=21 %}
+						<td><input type="checkbox" class="CB" name={{ click[i] }} checked="true" disabled /></td>
+					{% else %}
+						{% if response_click[i] %}
+							<td><input type="checkbox" class="CB" name={{ click[i] }} checked="true" /></td>
+						{% else %}
+							<td><input type="checkbox" class="CB" name={{ click[i] }} /></td>
+						{% endif %}
+					{% endif %}
+
+					{% if calc %}
+						<td>{{n_visits[i]}}</td><td>{{n_destroyed[i]}}</td><td>{{totalcost[i]}}</td>
+					{% endif %}
+				</tr>
+			{% endfor %}
+			<tr>
+			<td>Total</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+			{% if calc %}
+				<td>{{ finalvisits }}</td><td>{{ finaldestroys }}</td><td>{{ finalcost }}</td>
+			{% endif %}
+		</tr>
+	</table>
+	<p><input type="submit" name="submit" /></p>
+	</form>
+	<script>
+		let log = console.log;
+
+		let startforce2 = document.getElementById('Startforce2');
+		let endforce2 = document.getElementById('Endforce2');
+
+
+		startforce2.addEventListener('focus', setstartforce);
+		endforce2.addEventListener('focus', setendforce);
+		startforce2.addEventListener('click', setendforce);
+		endforce2.addEventListener('click', setstartforce);
+
+		function setendforce(){
+			log("hi")
+			var selected = parseInt(startforce2.options[startforce2.selectedIndex].text);
+			for (i = 0; i<30 ; i++){
+				var current = parseInt(endforce2.options[i].text)
+				if (current > selected){
+					endforce2.options[i].removeAttribute("disabled")
+				} else {
+					endforce2.options[i].setAttribute("disabled", true)
+				}
+			}
+		}
+		function setstartforce(){
+			var selected = parseInt(endforce2.options[endforce2.selectedIndex].text);
+			for (i = 0; i<30 ; i++){
+				var current = parseInt(startforce2.options[i].text)
+				if (current < selected){
+					startforce2.options[i].removeAttribute("disabled")
+				} else {
+					startforce2.options[i].setAttribute("disabled", true)
+				}
+			}
+		}
+
+
+		var allScroll2 = document.getElementsByName('allscroll')[0];
+		var allWard2 = document.getElementsByName('allward')[0];
+		var allLucky2 = document.getElementsByName('alllucky')[0];
+		var allClick2 = document.getElementsByName('allclick')[0];
+
+		allScroll2.addEventListener('click', selectall, 'scroll');
+		allWard2.addEventListener('click', selectall, 'ward');
+		allLucky2.addEventListener('click', selectall, 'lucky');
+		allClick2.addEventListener('click', selectall, 'click');
+
+		function selectall(evt){ //str can be scroll,ward,lucky,click
+			let str = evt.currentTarget.name;
+			let select = document.getElementsByName(str)[0];
+			// log(str)
+			if (select.checked == true){
+				for (i=0; i<30; i++){
+					let temp = document.getElementsByName(str.slice(3,4) + i.toString() )[0]
+					if (!temp.disabled){
+						temp.checked = true
+					}
+				} 
+			} else if (select.checked == false){
+				for (i=0; i<30; i++){
+					let temp = document.getElementsByName(str.slice(3,4) + i.toString() )[0]
+					if (!temp.disabled){
+						temp.checked = false
+					}
+				} 
+			}
+			
+		}
+	</script>
+	{% endif %}
+
+	{% if not calc %}
+
+	<form action = "#" method = "post">
+	<label>Choose the initial Starforce:</label>
+	<select id="Startforce1" name="Startforce">
+		{% for i in range(30) %}
+	  		<option value={{i}}>{{i}}</option>
+		{% endfor %}
+	</select>
+	<br>
+	<label>Choose the final Starforce:</label>
+	<select id="Endforce1" name="Endforce">
+		{% for i in range(1,31) %}
+			{% if i != 30 %}
+	  			<option value={{i}}>{{i}}</option>
+	  		{% else %}
+				<option value={{i}} selected="selected">{{i}}</option>
+			{% endif %}
+		{% endfor %}
+	</select>
+	<table class="datatable">
+		<tr>
+			<th>StarForce</th><th>Success</th><th>No Change</th><th>Decrease</th><th>Destroyed</th><th>Shield</th><th>Ward</th><th>Lucky</th><th>Click</th>
+			{% if calc %}
+				<th>Num Visits</th><th>Num Destroyed</th><th>Total Cost(M)</th>
+			{% endif %}
+		</tr>
+			<tr> 
+				<td>Select All</td><td></td><td></td><td></td><td></td>
+				<td><input type="checkbox" class="CB" name="allscroll" /></td>
+				<td><input type="checkbox" class="CB" name="allward" /></td>
+				<td><input type="checkbox" class="CB" name="alllucky" /></td>
+				<td><input type="checkbox" class="CB" name="allclick" checked="true" /></td>
+ 			</tr>
+			{% for i in range(10) %}
+				<tr>
+					<td>{{i}}</td><td>{{increase[i]}}</td><td>{{same[i]}}</td><td>{{decrease[i]}}</td><td>{{destroy[i]}}</td>
+					<td><input type="checkbox" class="CB" name={{ scroll[i] }} disabled /></td>
+					<td><input type="checkbox" class="CB" name={{ ward[i] }} disabled /></td>
+					<td><input type="checkbox" class="CB" name={{ lucky[i] }} /></td>
+					<td><input type="checkbox" class="CB" name={{ click[i] }} checked = "true"/></td>
+					{% if calc %}
+						<td>{{n_visits[i]}}</td><td>{{n_destroyed[i]}}</td><td>{{totalcost[i]}}</td>
+					{% endif %}
+				</tr>
+			{% endfor %}
+			{% for i in range(10,30) %}
+				<td>{{i}}</td><td>{{increase[i]}}</td><td>{{same[i]}}</td><td>{{decrease[i]}}</td><td>{{destroy[i]}}</td>
+					<td><input type="checkbox" class="CB" name={{ scroll[i] }} /></td>
+					<td><input type="checkbox" class="CB" name={{ ward[i] }} /></td>
+					<td><input type="checkbox" class="CB" name={{ lucky[i] }} /></td>
+					{% if i>=21 %}
+						<td><input type="checkbox" class="CB" name={{ click[i] }} checked="true" disabled /></td>
+					{% else %}
+						<td><input type="checkbox" class="CB" name={{ click[i] }} checked="true" /></td>
+					{% endif %}
+
+					{% if calc %}
+						<td>{{n_visits[i]}}</td><td>{{n_destroyed[i]}}</td><td>{{totalcost[i]}}</td>
+					{% endif %}
+				</tr>
+			{% endfor %}
+		<tr><td> Total</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+	</table>
+	<p><input type="submit" name="submit" /></p>
+	</form>
+	<script>
+		let log = console.log;
+
+		let startforce1 = document.getElementById('Startforce1');
+		let endforce1 = document.getElementById('Endforce1');
+
+		startforce1.addEventListener('click', setendforce);
+		endforce1.addEventListener('click', setstartforce);
+
+		function setendforce(){
+			var selected = parseInt(startforce1.options[startforce1.selectedIndex].text);
+			for (i = 0; i<30 ; i++){
+				var current = parseInt(endforce1.options[i].text)
+				if (current > selected){
+					endforce1.options[i].removeAttribute("disabled")
+				} else {
+					endforce1.options[i].setAttribute("disabled", true)
+				}
+			}
+		}
+		function setstartforce(){
+			var selected = parseInt(endforce1.options[endforce1.selectedIndex].text);
+			for (i = 0; i<30 ; i++){
+				var current = parseInt(startforce1.options[i].text)
+				if (current < selected){
+					startforce1.options[i].removeAttribute("disabled")
+				} else {
+					startforce1.options[i].setAttribute("disabled", true)
+				}
+			}
+		}
+		var allScroll1 = document.getElementsByName('allscroll')[0];
+		var allWard1 = document.getElementsByName('allward')[0];
+		var allLucky1 = document.getElementsByName('alllucky')[0];
+		var allClick1 = document.getElementsByName('allclick')[0];
+
+		allScroll1.addEventListener('click', selectall, 'scroll');
+		allWard1.addEventListener('click', selectall, 'ward');
+		allLucky1.addEventListener('click', selectall, 'lucky');
+		allClick1.addEventListener('click', selectall, 'click');
+
+		function selectall(evt){ //str can be scroll,ward,lucky,click
+			let str = evt.currentTarget.name;
+			let select = document.getElementsByName(str)[0];
+			// log(str)
+			if (select.checked == true){
+				for (i=0; i<30; i++){
+					let temp = document.getElementsByName(str.slice(3,4) + i.toString() )[0]
+					if (!temp.disabled){
+						temp.checked = true
+					}
+				} 
+			} else if (select.checked == false){
+				for (i=0; i<30; i++){
+					let temp = document.getElementsByName(str.slice(3,4) + i.toString() )[0]
+					if (!temp.disabled){
+						temp.checked = false
+					}
+				} 
+			}
+			
+		}
+	</script>
+	{% endif %}
+	<h3>For the checkboxes:</h3>
+	<ol>
+		<li>Shield Scroll: Prevents SF from decreasing</li>
+		<li>Ward Scroll: Prevents Item from being destroyed</li>
+		<li>Lucky Scroll: Provides a 10% additional chance to increase the SF</li>
+		<li>Click: Provides a 5% additional chance to increase the SF. (Note: for SF 21-30, this is set to "on" otherwise there will be numerical instabilities.)</li>
+	</ol>
+	<h3>For the generated columns:</h3>
+	<ol>
+		<li>Num Visits: Expected number of times that that SF level is reached. For example, if the SF level in question is 10, then this includes:</li>
+			<ol>
+				<li>SF9 going to SF10 </li>
+				<li>SF10 going to SF10</li>
+				<li>SF11 going to SF10</li>
+			</ol>
+		<li>Num Destroyed: Expected number of times the item is destroyed at that SF</li>
+		<li>Total Cost(M): Expected mesos (in millions) to be spent at that SF</li>
+	</ol>
+	<h3>Mathematics behind the Calculations</h3>
+	This is a Markov chain with an absorbing state (i.e. we stop once our target is reached). Thus closed form solutions (i.e. the numbers generated are exact up to floating point precision) can be reached. The compulsory checking of the "click" column for the last few SFs are due to numerical instabilities that arise from inverting an extremely ill conditioned matrix if they are left unchecked. In other words, Nexon's SF odds are so bad that you'll probably need a 256-bit system (most are 64) to calculate the actual values if those boxes are unticked.... 
+</body>
+</html>

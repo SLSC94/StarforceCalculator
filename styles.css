@@ -1,0 +1,14 @@
+h2 {
+  color: navy;
+}
+
+<style style="text/css">
+	.datatable td{ 
+		padding:7px; border:#4e95f4 1px solid;
+	}
+	/* Define the hover highlight color for the table row */
+    .datatable tr:hover {
+          background-color: #ffff99;
+    }
+</style>
+
